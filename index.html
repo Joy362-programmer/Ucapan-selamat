@@ -127,7 +127,7 @@
       isFlipped = true; 
       playFlipSound(); 
       if (currentCardIndex === 3) { 
-        triggerParticles(112, true, 0.5, originX, originY, 1.8); 
+        triggerParticles(112, true, 0.5, originX, originY, 1.8); // Spread multiplier lebih luas khusus kartu 4
       } else { 
         triggerParticles(40, false, 0.78, originX, originY, 1.0); 
       } 
@@ -141,37 +141,18 @@
     } 
   }
 
-  function initAudio() { 
-    try {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)(); 
-    } catch(e) {
-      console.log("Audio not supported");
-    }
-  }
-
-  function playFlipSound() { if (!audioContext) return; if(audioContext.state === 'suspended') audioContext.resume(); const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(300, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1); gain.gain.setValueAtTime(0.5, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15); osc.start(); osc.stop(audioContext.currentTime + 0.15); }
-  function playDrawSound() { if (!audioContext) return; if(audioContext.state === 'suspended') audioContext.resume(); const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'triangle'; osc.frequency.setValueAtTime(800, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1); gain.gain.setValueAtTime(0.3, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1); osc.start(); osc.stop(audioContext.currentTime + 0.1); }
+  function initAudio() { audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
+  function playFlipSound() { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(300, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1); gain.gain.setValueAtTime(0.5, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15); osc.start(); osc.stop(audioContext.currentTime + 0.15); }
+  function playDrawSound() { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'triangle'; osc.frequency.setValueAtTime(800, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1); gain.gain.setValueAtTime(0.3, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1); osc.start(); osc.stop(audioContext.currentTime + 0.1); }
   function playScorePing(frequency) { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'square'; osc.frequency.setValueAtTime(frequency, audioContext.currentTime); gain.gain.setValueAtTime(0.1, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05); osc.start(); osc.stop(audioContext.currentTime + 0.05); }
   function playScoreSuccess() { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(440, audioContext.currentTime); osc.frequency.setValueAtTime(554.37, audioContext.currentTime + 0.1); osc.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.2); osc.frequency.setValueAtTime(880, audioContext.currentTime + 0.3); gain.gain.setValueAtTime(0.3, audioContext.currentTime); gain.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + 0.8); osc.start(); osc.stop(audioContext.currentTime + 0.8); }
   
-  // Perbaikan algoritma animasi skor agar menggunakan variabel global / referensi aman dan mencegah tumpang tindih interval
-  let scoreInterval = null;
   function runScoreAnimation(ox, oy) { 
-    if (scoreInterval) clearInterval(scoreInterval);
     let chips = 0; let mult = 0; const targetChips = 5000; const targetMult = 25; const scoreDisplay = document.getElementById('scoreDisplay'); const rankDisplay = document.getElementById('rankDisplay'); if(!scoreDisplay || !rankDisplay) return; 
-    
-    rankDisplay.innerText = "MENGHITUNG...";
-    scoreInterval = setInterval(() => { 
-      chips += 250; 
-      mult += 1; 
-      if(chips > targetChips) chips = targetChips; 
-      if(mult > targetMult) mult = targetMult; 
-      scoreDisplay.innerText = chips + ' X ' + mult; 
-      playScorePing(400 + (mult * 20)); 
-      
+    let interval = setInterval(() => { 
+      chips += 250; mult += 1; if(chips > targetChips) chips = targetChips; if(mult > targetMult) mult = targetMult; scoreDisplay.innerText = chips + ' X ' + mult; playScorePing(400 + (mult * 20)); 
       if(chips === targetChips && mult === targetMult) { 
-        clearInterval(scoreInterval); 
-        scoreInterval = null;
+        clearInterval(interval); 
         setTimeout(() => { 
           rankDisplay.innerText = "RANK S+ UTS MASTER"; 
           playScoreSuccess(); 
@@ -183,12 +164,7 @@
 
   const bgCanvas = document.getElementById('bg-canvas'); const bgCtx = bgCanvas.getContext('2d'); let angleOffset = 0;
   const particleCanvas = document.getElementById('particle-canvas'); const pCtx = particleCanvas.getContext('2d'); let particles = [];
-  function resizeCanvas() { 
-    bgCanvas.width = window.innerWidth; 
-    bgCanvas.height = window.innerHeight; 
-    particleCanvas.width = window.innerWidth; 
-    particleCanvas.height = window.innerHeight; 
-  }
+  function resizeCanvas() { bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; particleCanvas.width = window.innerWidth; particleCanvas.height = window.innerHeight; }
   window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
   function drawSpiral() { 
@@ -250,278 +226,6 @@
         pCtx.arc(0, 0, p.size, 0, Math.PI * 2); 
         pCtx.fillStyle = p.color; 
         pCtx.fill(); 
-        pCtx.lineWidth, 2; 
-        pCtx.lineWidth = 2; 
-        pCtx.strokeStyle = '#000'; 
-        pCtx.stroke(); 
-        pCtx.beginPath(); 
-        pCtx.arc(0, 0, p.size * 0.6, 0, Math.PI * 2); 
-        pCtx.strokeStyle = 'rgba(0,0,0,0.5)'; 
-        pCtx.stroke(); 
-      } 
-      pCtx.restore(); 
-    } 
-    requestAnimationFrame(drawParticles); 
-  }
-
-  drawSpiral(); 
-  drawParticles(); 
-  initCard();
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hai, Amalia</title>
-<style>
-  * { -webkit-tap-highlight-color: transparent; outline: none; }
-  body { background-color: #0f172a; color: #f8fafc; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; position: relative; }
-  #bg-canvas, #particle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
-  #particle-canvas { z-index: 10; }
-  .ui-layer { z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 30px; position: relative; width: 100%; }
-  .float-wrapper { animation: float 3s ease-in-out infinite; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-  .float-wrapper:hover { animation-play-state: paused; }
-  
-  .slide-in-right { animation: slideInRight 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-  .slide-out-left { animation: slideOutLeft 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; }
-
-  @keyframes slideInRight {
-    0% { transform: translateX(120vw) rotate(15deg); opacity: 0; }
-    100% { transform: translateX(0) rotate(0deg); opacity: 1; }
-  }
-  @keyframes slideOutLeft {
-    0% { transform: translateX(0) rotate(0deg); opacity: 1; }
-    100% { transform: translateX(-120vw) rotate(-15deg); opacity: 0; }
-  }
-
-  .card-container { perspective: 1000px; cursor: pointer; }
-  .card { width: 320px; height: 480px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-  .card-container:hover .card:not(.flipped) { transform: rotateY(15deg) rotateX(10deg) scale(1.05); }
-  .card.flipped { transform: rotateY(180deg) scale(1.1) !important; }
-  .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border: 8px solid #fbbf24; border-radius: 16px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 24px; box-shadow: 10px 10px 0px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.5); }
-  .card-front { background: radial-gradient(circle, #1e3a8a 0%, #0f172a 100%); color: #fbbf24; }
-  .card-back { background: #f8fafc; color: #0f172a; border-color: #ef4444; transform: rotateY(180deg); }
-  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-  h1 { font-size: 2.2rem; margin: 10px 0; text-transform: uppercase; text-shadow: 2px 2px 0px #000; }
-  .card-back h1 { text-shadow: 2px 2px 0px #cbd5e1; color: #ef4444; }
-  p { font-size: 1.1rem; line-height: 1.6; font-weight: bold; }
-  .suit-text { font-size: 1.5rem; margin: 10px; font-weight: 900; letter-spacing: 2px; }
-  .red-text { color: #ef4444; text-shadow: 1px 1px 0px #000; }
-  .black-text { color: #0f172a; text-shadow: 1px 1px 0px #cbd5e1; }
-  .btn-hint { margin-top: 20px; font-size: 0.9rem; background: #ef4444; color: white; padding: 5px 10px; border-radius: 5px; border: 2px solid #000; font-weight: bold; }
-  .btn-draw { background-color: #fbbf24; color: #0f172a; border: 4px solid #000; padding: 15px 30px; font-size: 1.2rem; font-family: inherit; font-weight: bold; cursor: pointer; border-radius: 8px; box-shadow: 5px 5px 0px #000; transition: all 0.1s; position: relative; z-index: 20; pointer-events: auto; }
-  .btn-draw:active { transform: translate(5px, 5px); box-shadow: 0px 0px 0px #000; }
-  .stats-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
-  .stats-table td { padding: 8px; border-bottom: 2px dashed #cbd5e1; font-weight: bold; }
-  .stats-table td:last-child { text-align: right; color: #ef4444; }
-  .score-box { background: #0f172a; color: #fbbf24; padding: 15px; border-radius: 8px; margin-top: 15px; width: 90%; border: 3px solid #ef4444; }
-  .score-title { font-size: 0.9rem; color: #f8fafc; }
-  .score-number { font-size: 1.8rem; font-weight: bold; }
-</style>
-</head>
-<body>
-<canvas id="bg-canvas"></canvas>
-<canvas id="particle-canvas"></canvas>
-<div class="ui-layer">
-  <div class="float-wrapper" id="floatWrapper">
-    <div class="card-container" onclick="flipCard()">
-      <div class="card" id="balatroCard"></div>
-    </div>
-  </div>
-  <button class="btn-draw" id="btnDraw" onclick="drawNextCard()">TARIK KARTU BARU (1/4)</button>
-</div>
-<script>
-  const deck = [
-    { front: '<div class="suit-text red-text">[CONGRATULATIONS]</div><h1>AMALIA</h1><div class="suit-text red-text">[CARD]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<div class="suit-text black-text">[ SURAT ]</div><h1>Hai, Ama sayang</h1><p>Selamat atas nilai UTS sekolahnya ya sayang, aku bangga, berarti itu tanda kamu serius</p><p>Dari awal bertemu, aku sekarang baru bisa beri ucapan ini untuk kamu.</p><div class="suit-text black-text">[SELAMAT]</div>' },
-    { front: '<div class="suit-text red-text">[STATS]</div><h1>PLAYER<br>STATS</h1><div class="suit-text red-text">[CARD]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<h1>AMALIA</h1><p>Statistik</p><table class="stats-table"><tr><td>Game Focus</td><td>Level 95</td></tr><tr><td>Study Focus</td><td>Level 100</td></tr><tr><td>Luck</td><td>MAX</td></tr></table><p style="font-size: 0.9rem; margin-top: 15px;">Semoga nilainya stabil dan makin hebat terus ya, sayang.</p>' },
-    { front: '<div class="suit-text red-text">[PERHITUNGAN]</div><h1>SCORE<br>UTS</h1><div class="suit-text red-text">[ MULTIPLIER ]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<h1>HASIL AKHIR</h1><div class="score-box"><div class="score-title">CHIPS X MULT</div><div class="score-number" id="scoreDisplay">0 X 0</div></div><h1 style="font-size: 1.5rem; margin-top:15px; color:#ef4444;" id="rankDisplay">MENGHITUNG...</h1>' },
-    { front: '<div class="suit-text red-text">[SECRET]</div><h1>PESAN<br>CINTA</h1><div class="suit-text red-text">[CARD]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<div class="suit-text black-text">[ TRUE LOVE ]</div><h1 style="font-size: 1.1rem; color: #ef4444;">Hai Amalia, cintaku</h1><p style="font-size: 1rem;">Kamu adalah <i>kisah</i> paling indah di hidupku, terima kasih untuk selalu berusaha jadi yang terbaik. Aku akan terus ada di sisi kamu dan mendukung setiap <i>skenario</i> yang akan muncul, aku juga akan berusaha jadi kisah yang kamu impikan suatu saat nanti</p><div class="suit-text red-text" style="font-size: 1.7rem; margin-top: 4px;">❤️</div>' }
-  ];
-  let currentCardIndex = 0; let isFlipped = false; let audioContext = null; let isAnimatingCard = false;
-
-  function initCard() { 
-    const cardEl = document.getElementById('balatroCard');
-    cardEl.classList.remove('flipped');
-    isFlipped = false;
-    cardEl.innerHTML = '<div class="card-front">' + deck[currentCardIndex].front + '</div><div class="card-back">' + deck[currentCardIndex].back + '</div>'; 
-    document.getElementById('btnDraw').innerText = 'TARIK KARTU BARU (' + (currentCardIndex + 1) + '/' + deck.length + ')'; 
-  }
-
-  function drawNextCard() { 
-    if (isAnimatingCard) return;
-    if (!audioContext) initAudio(); 
-    playDrawSound(); 
-    isAnimatingCard = true;
-
-    const wrapper = document.getElementById('floatWrapper');
-    const isLoopingBack = (currentCardIndex === deck.length - 1);
-
-    if (isLoopingBack) {
-      wrapper.classList.add('slide-out-left');
-      setTimeout(() => {
-        currentCardIndex = 0;
-        initCard();
-        wrapper.classList.remove('slide-out-left');
-        wrapper.classList.add('slide-in-right');
-        setTimeout(() => {
-          wrapper.classList.remove('slide-in-right');
-          isAnimatingCard = false;
-        }, 600);
-      }, 500);
-    } else {
-      wrapper.classList.add('slide-out-left');
-      setTimeout(() => {
-        currentCardIndex++;
-        initCard();
-        wrapper.classList.remove('slide-out-left');
-        wrapper.classList.add('slide-in-right');
-        setTimeout(() => {
-          wrapper.classList.remove('slide-in-right');
-          isAnimatingCard = false;
-        }, 600);
-      }, 400);
-    }
-  }
-
-  function flipCard() { 
-    if(!audioContext) initAudio(); 
-    const card = document.getElementById('balatroCard'); 
-    
-    const rect = card.getBoundingClientRect();
-    const originX = rect.left + rect.width / 2;
-    const originY = rect.top + rect.height / 2;
-
-    if (!isFlipped) { 
-      card.classList.add('flipped'); 
-      isFlipped = true; 
-      playFlipSound(); 
-      if (currentCardIndex === 3) { 
-        triggerParticles(112, true, 0.5, originX, originY, 1.8); 
-      } else { 
-        triggerParticles(40, false, 0.78, originX, originY, 1.0); 
-      } 
-      if (currentCardIndex === 2) { 
-        runScoreAnimation(originX, originY); 
-      } 
-    } else { 
-      card.classList.remove('flipped'); 
-      isFlipped = false; 
-      playFlipSound(); 
-    } 
-  }
-
-  function initAudio() { 
-    try {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)(); 
-    } catch(e) {
-      console.log("Audio not supported");
-    }
-  }
-
-  function playFlipSound() { if (!audioContext) return; if(audioContext.state === 'suspended') audioContext.resume(); const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(300, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1); gain.gain.setValueAtTime(0.5, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15); osc.start(); osc.stop(audioContext.currentTime + 0.15); }
-  function playDrawSound() { if (!audioContext) return; if(audioContext.state === 'suspended') audioContext.resume(); const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'triangle'; osc.frequency.setValueAtTime(800, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1); gain.gain.setValueAtTime(0.3, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1); osc.start(); osc.stop(audioContext.currentTime + 0.1); }
-  function playScorePing(frequency) { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'square'; osc.frequency.setValueAtTime(frequency, audioContext.currentTime); gain.gain.setValueAtTime(0.1, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05); osc.start(); osc.stop(audioContext.currentTime + 0.05); }
-  function playScoreSuccess() { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(440, audioContext.currentTime); osc.frequency.setValueAtTime(554.37, audioContext.currentTime + 0.1); osc.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.2); osc.frequency.setValueAtTime(880, audioContext.currentTime + 0.3); gain.gain.setValueAtTime(0.3, audioContext.currentTime); gain.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + 0.8); osc.start(); osc.stop(audioContext.currentTime + 0.8); }
-  
-  // Perbaikan algoritma animasi skor agar menggunakan variabel global / referensi aman dan mencegah tumpang tindih interval
-  let scoreInterval = null;
-  function runScoreAnimation(ox, oy) { 
-    if (scoreInterval) clearInterval(scoreInterval);
-    let chips = 0; let mult = 0; const targetChips = 5000; const targetMult = 25; const scoreDisplay = document.getElementById('scoreDisplay'); const rankDisplay = document.getElementById('rankDisplay'); if(!scoreDisplay || !rankDisplay) return; 
-    
-    rankDisplay.innerText = "MENGHITUNG...";
-    scoreInterval = setInterval(() => { 
-      chips += 250; 
-      mult += 1; 
-      if(chips > targetChips) chips = targetChips; 
-      if(mult > targetMult) mult = targetMult; 
-      scoreDisplay.innerText = chips + ' X ' + mult; 
-      playScorePing(400 + (mult * 20)); 
-      
-      if(chips === targetChips && mult === targetMult) { 
-        clearInterval(scoreInterval); 
-        scoreInterval = null;
-        setTimeout(() => { 
-          rankDisplay.innerText = "RANK S+ UTS MASTER"; 
-          playScoreSuccess(); 
-          triggerParticles(140, false, 0.78, ox, oy, 1.0); 
-        }, 300); 
-      } 
-    }, 50); 
-  }
-
-  const bgCanvas = document.getElementById('bg-canvas'); const bgCtx = bgCanvas.getContext('2d'); let angleOffset = 0;
-  const particleCanvas = document.getElementById('particle-canvas'); const pCtx = particleCanvas.getContext('2d'); let particles = [];
-  function resizeCanvas() { 
-    bgCanvas.width = window.innerWidth; 
-    bgCanvas.height = window.innerHeight; 
-    particleCanvas.width = window.innerWidth; 
-    particleCanvas.height = window.innerHeight; 
-  }
-  window.addEventListener('resize', resizeCanvas); resizeCanvas();
-
-  function drawSpiral() { 
-    const cx = bgCanvas.width / 2; const cy = bgCanvas.height / 2; const maxRadius = Math.max(cx, cy) * 1.5; bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height); bgCtx.fillStyle = '#0f172a'; bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height); bgCtx.save(); bgCtx.translate(cx, cy); bgCtx.rotate(angleOffset); const numArms = 12; const step = (Math.PI * 2) / numArms; for (let i = 0; i < numArms; i++) { bgCtx.beginPath(); bgCtx.moveTo(0, 0); bgCtx.quadraticCurveTo( Math.cos(i * step + 0.5) * maxRadius * 0.5, Math.sin(i * step + 0.5) * maxRadius * 0.5, Math.cos(i * step) * maxRadius, Math.sin(i * step) * maxRadius ); bgCtx.lineTo( Math.cos((i+0.5) * step) * maxRadius, Math.sin((i+0.5) * step) * maxRadius ); bgCtx.lineTo(0, 0); bgCtx.fillStyle = i % 2 === 0 ? '#1e3a8a' : '#0f172a'; bgCtx.fill(); } bgCtx.restore(); angleOffset -= 0.002; requestAnimationFrame(drawSpiral); 
-  }
-
-  function triggerParticles(amount = 40, isLove = false, speedFactor = 0.78, cx, cy, spreadMult = 1.0) { 
-    for (let i = 0; i < amount; i++) { 
-      particles.push({ 
-        x: cx, 
-        y: cy, 
-        vx: (Math.random() - 0.5) * 16 * speedFactor * spreadMult, 
-        vy: ((Math.random() - 0.5) * 16 - 5) * speedFactor * spreadMult, 
-        size: Math.random() * 8 + 4, 
-        color: Math.random() > 0.5 ? '#fbbf24' : '#ef4444', 
-        life: 1.0, 
-        decay: (Math.random() * 0.015 + 0.008) * speedFactor, 
-        rotation: Math.random() * Math.PI * 2, 
-        vr: (Math.random() - 0.5) * 0.2 * speedFactor, 
-        type: (isLove && Math.random() > 0.5) ? 'heart' : 'circle' 
-      }); 
-    } 
-  }
-
-  function drawParticles() { 
-    pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height); 
-    for (let i = particles.length - 1; i >= 0; i--) { 
-      let p = particles[i]; 
-      p.x += p.vx; 
-      p.y += p.vy; 
-      p.vy += 0.15; 
-      p.rotation += p.vr; 
-      p.life -= p.decay; 
-      
-      if (p.life <= 0) { 
-        particles.splice(i, 1); 
-        continue; 
-      } 
-      
-      pCtx.save(); 
-      pCtx.translate(p.x, p.y); 
-      pCtx.rotate(p.rotation); 
-      pCtx.globalAlpha = p.life; 
-      
-      if (p.type === 'heart') { 
-        pCtx.translate(0, -p.size/2); 
-        pCtx.beginPath(); 
-        let w = p.size * 2; let h = p.size * 2; 
-        pCtx.moveTo(0, h/4); 
-        pCtx.bezierCurveTo(w/2, -h/2, w*1.2, h/3, 0, h); 
-        pCtx.bezierCurveTo(-w*1.2, h/3, -w/2, -h/2, 0, h/4); 
-        pCtx.fillStyle = p.color; 
-        pCtx.fill(); 
-        pCtx.lineWidth = 1; 
-        pCtx.strokeStyle = '#000'; 
-        pCtx.stroke(); 
-      } else { 
-        pCtx.beginPath(); 
-        pCtx.arc(0, 0, p.size, 0, Math.PI * 2); 
-        pCtx.fillStyle = p.color; 
-        pCtx.fill(); 
-        pCtx.lineWidth, 2; 
         pCtx.lineWidth = 2; 
         pCtx.strokeStyle = '#000'; 
         pCtx.stroke(); 
