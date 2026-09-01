@@ -6,18 +6,9 @@
 <title>Hai, Amalia</title>
 <style>
   * { -webkit-tap-highlight-color: transparent; outline: none; }
-  body { background-color: #0f172a; color: #f8fafc; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
+  body { background-color: #0f172a; color: #f8fafc; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; position: relative; }
   #bg-canvas, #particle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
   #particle-canvas { z-index: 10; }
-  
-  /* Loading Screen Styles */
-  #loadingScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
-  #loadingScreen.hidden { display: none; }
-  #loadingCanvas { width: 200px; height: 200px; }
-  .loading-text { color: #fbbf24; font-size: 1.2rem; margin-top: 20px; letter-spacing: 2px; font-weight: bold; text-shadow: 2px 2px 0px #000; }
-  .loading-text.loading { animation: pulse 1.5s ease-in-out infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
-  
   .ui-layer { z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 30px; position: relative; width: 100%; }
   .float-wrapper { animation: float 3s ease-in-out infinite; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   .float-wrapper:hover { animation-play-state: paused; }
@@ -38,7 +29,7 @@
   .card { width: 320px; height: 480px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   .card-container:hover .card:not(.flipped) { transform: rotateY(15deg) rotateX(10deg) scale(1.05); }
   .card.flipped { transform: rotateY(180deg) scale(1.1) !important; }
-  .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border: 8px solid #fbbf24; border-radius: 16px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border: 8px solid #fbbf24; border-radius: 16px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 24px; box-shadow: 10px 10px 0px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.5); }
   .card-front { background: radial-gradient(circle, #1e3a8a 0%, #0f172a 100%); color: #fbbf24; }
   .card-back { background: #f8fafc; color: #0f172a; border-color: #ef4444; transform: rotateY(180deg); }
   @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
@@ -49,8 +40,7 @@
   .red-text { color: #ef4444; text-shadow: 1px 1px 0px #000; }
   .black-text { color: #0f172a; text-shadow: 1px 1px 0px #cbd5e1; }
   .btn-hint { margin-top: 20px; font-size: 0.9rem; background: #ef4444; color: white; padding: 5px 10px; border-radius: 5px; border: 2px solid #000; font-weight: bold; }
-  .btn-draw { background-color: #fbbf24; color: #0f172a; border: 4px solid #000; padding: 15px 30px; font-size: 1.2rem; font-family: inherit; font-weight: bold; cursor: pointer; border-radius: 8px; box-shadow: 5px 5px 0px #000; transition: all 0.1s; }
-  .btn-draw:hover { background-color: #fcd34d; box-shadow: 7px 7px 0px #000; }
+  .btn-draw { background-color: #fbbf24; color: #0f172a; border: 4px solid #000; padding: 15px 30px; font-size: 1.2rem; font-family: inherit; font-weight: bold; cursor: pointer; border-radius: 8px; box-shadow: 5px 5px 0px #000; transition: all 0.1s; position: relative; z-index: 20; pointer-events: auto; }
   .btn-draw:active { transform: translate(5px, 5px); box-shadow: 0px 0px 0px #000; }
   .stats-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
   .stats-table td { padding: 8px; border-bottom: 2px dashed #cbd5e1; font-weight: bold; }
@@ -63,13 +53,6 @@
 <body>
 <canvas id="bg-canvas"></canvas>
 <canvas id="particle-canvas"></canvas>
-
-<!-- Loading Screen -->
-<div id="loadingScreen">
-  <canvas id="loadingCanvas"></canvas>
-  <div class="loading-text loading">Loading...</div>
-</div>
-
 <div class="ui-layer">
   <div class="float-wrapper" id="floatWrapper">
     <div class="card-container" onclick="flipCard()">
@@ -80,127 +63,12 @@
 </div>
 <script>
   const deck = [
-    { front: '<div class="suit-text red-text">[CONGRATULATIONS]</div><h1>AMALIA</h1><div class="suit-text red-text">[CARD]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<div class="suit-text red-text">✨ SELAMAT ✨</div><h1>AMALIA</h1><p>Kamu lebih bersinar<br>dari bintang di langit ✨</p><div class="score-box"><div class="score-title">BRILLIANCE</div><div class="score-number">∞</div></div>' },
-    { front: '<div class="suit-text red-text">[STATS]</div><h1>PLAYER<br>STATS</h1><div class="suit-text red-text">[CARD]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<h1>AMALIA</h1><p>Keindahan: S+<br>Kepribadian: S+<br>Tawa: S+<br>Hati: ∞</p>' },
-    { front: '<div class="suit-text red-text">[PERHITUNGAN]</div><h1>SCORE<br>UTS</h1><div class="suit-text red-text">[ MULTIPLIER ]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<h1>HASIL UTS</h1><div class="score-box"><div class="score-title">CHIPS</div><div class="score-number" id="scoreDisplay">0 X 0</div><div class="score-title" style="margin-top: 10px;" id="rankDisplay">CALCULATING...</div></div>' },
-    { front: '<div class="suit-text red-text">[SECRET]</div><h1>PESAN<br>CINTA</h1><div class="suit-text red-text">[CARD]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<h1>💕 PESAN 💕</h1><p>Kamu adalah<br>orang yang paling<br>spesial di dunia ini<br>Terima kasih sudah<br>menjadi dirimu ❤️</p>' }
+    { front: '<div class="suit-text red-text">[CONGRATULATIONS]</div><h1>AMALIA</h1><div class="suit-text red-text">[CARD]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<div class="suit-text black-text">[ SURAT ]</div><h1>Hai, Ama sayang</h1><p>Selamat atas nilai UTS sekolahnya ya sayang, aku bangga, berarti itu tanda kamu serius</p><p>Dari awal bertemu, aku sekarang baru bisa beri ucapan ini untuk kamu.</p><div class="suit-text black-text">[SELAMAT]</div>' },
+    { front: '<div class="suit-text red-text">[STATS]</div><h1>PLAYER<br>STATS</h1><div class="suit-text red-text">[CARD]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<h1>AMALIA</h1><p>Statistik</p><table class="stats-table"><tr><td>Game Focus</td><td>Level 95</td></tr><tr><td>Study Focus</td><td>Level 100</td></tr><tr><td>Luck</td><td>MAX</td></tr></table><p style="font-size: 0.9rem; margin-top: 15px;">Semoga nilainya stabil dan makin hebat terus ya, sayang.</p>' },
+    { front: '<div class="suit-text red-text">[PERHITUNGAN]</div><h1>SCORE<br>UTS</h1><div class="suit-text red-text">[ MULTIPLIER ]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<h1>HASIL AKHIR</h1><div class="score-box"><div class="score-title">CHIPS X MULT</div><div class="score-number" id="scoreDisplay">0 X 0</div></div><h1 style="font-size: 1.5rem; margin-top:15px; color:#ef4444;" id="rankDisplay">MENGHITUNG...</h1>' },
+    { front: '<div class="suit-text red-text">[SECRET]</div><h1>PESAN<br>CINTA</h1><div class="suit-text red-text">[CARD]</div><div class="btn-hint">KLIK UNTUK BUKA</div>', back: '<div class="suit-text black-text">Ucapan Hati yang Terdalam</div><h1 style="font-size: 1.1rem; color: #ef4444;">Hai Amalia, cintaku</h1><p style="font-size: 0.9rem;">Kamu adalah <i>kisah</i> paling indah di hidupku, terima kasih untuk selalu berusaha jadi yang terbaik, aku senang bisa bertemu sama kamu. Aku akan terus ada di sisi kamu dan mendukung setiap <i>skenario</i> yang akan muncul, aku juga akan berusaha jadi kisah yang kamu impikan suatu saat nanti</p><div class="suit-text red-text" style="font-size: 1.7rem; margin-top: 4px;">❤️</div>' }
   ];
   let currentCardIndex = 0; let isFlipped = false; let audioContext = null; let isAnimatingCard = false;
-
-  // Loading Animation Variables
-  let loadingComplete = false;
-  const loadingCanvas = document.getElementById('loadingCanvas');
-  const loadingCtx = loadingCanvas.getContext('2d');
-  loadingCanvas.width = 200;
-  loadingCanvas.height = 200;
-
-  let waterParticles = [];
-
-  class WaterDrop {
-    constructor(x, y) {
-      this.x = x;
-      this.y = y;
-      this.startY = y;
-      this.vy = Math.random() * 3 + 2;
-      this.vx = (Math.random() - 0.5) * 2;
-      this.size = Math.random() * 4 + 2;
-      this.life = 1.0;
-      this.maxLife = Math.random() * 1.5 + 1;
-      this.rotation = Math.random() * Math.PI * 2;
-      this.vr = (Math.random() - 0.5) * 0.1;
-    }
-
-    update() {
-      this.y -= this.vy;
-      this.x += this.vx;
-      this.life = Math.max(0, this.life - 0.02);
-      this.rotation += this.vr;
-    }
-
-    draw(ctx) {
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rotation);
-      ctx.globalAlpha = this.life;
-      
-      // Draw heart shape
-      ctx.beginPath();
-      let w = this.size * 2;
-      let h = this.size * 2;
-      ctx.moveTo(0, h/4);
-      ctx.bezierCurveTo(w/2, -h/2, w*1.2, h/3, 0, h);
-      ctx.bezierCurveTo(-w*1.2, h/3, -w/2, -h/2, 0, h/4);
-      ctx.fillStyle = '#fbbf24';
-      ctx.fill();
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      
-      ctx.restore();
-    }
-  }
-
-  function animateLoading() {
-    loadingCtx.clearRect(0, 0, loadingCanvas.width, loadingCanvas.height);
-
-    // Spawn water drops from bottom
-    if (Math.random() < 0.6) {
-      waterParticles.push(new WaterDrop(
-        loadingCanvas.width / 2 + (Math.random() - 0.5) * 60,
-        loadingCanvas.height + 10
-      ));
-    }
-
-    // Update and draw water particles
-    for (let i = waterParticles.length - 1; i >= 0; i--) {
-      waterParticles[i].update();
-      if (waterParticles[i].life <= 0) {
-        waterParticles.splice(i, 1);
-      } else {
-        waterParticles[i].draw(loadingCtx);
-      }
-    }
-
-    // Draw love heart in center
-    const cx = loadingCanvas.width / 2;
-    const cy = loadingCanvas.height / 2;
-    loadingCtx.save();
-    loadingCtx.translate(cx, cy);
-    
-    // Pulsing animation
-    const pulse = Math.sin(Date.now() * 0.003) * 0.2 + 1;
-    loadingCtx.scale(pulse, pulse);
-    
-    // Draw main heart
-    loadingCtx.beginPath();
-    let size = 30;
-    let w = size * 2;
-    let h = size * 2;
-    loadingCtx.moveTo(0, h/4);
-    loadingCtx.bezierCurveTo(w/2, -h/2, w*1.2, h/3, 0, h);
-    loadingCtx.bezierCurveTo(-w*1.2, h/3, -w/2, -h/2, 0, h/4);
-    loadingCtx.fillStyle = '#ef4444';
-    loadingCtx.fill();
-    loadingCtx.strokeStyle = '#fbbf24';
-    loadingCtx.lineWidth = 3;
-    loadingCtx.stroke();
-    
-    loadingCtx.restore();
-
-    requestAnimationFrame(animateLoading);
-  }
-
-  function finishLoading() {
-    loadingComplete = true;
-    document.getElementById('loadingScreen').classList.add('hidden');
-    drawSpiral();
-    drawParticles();
-    initCard();
-  }
-
-  // Start loading animation
-  animateLoading();
-  setTimeout(finishLoading, 3000);
 
   function initCard() { 
     const cardEl = document.getElementById('balatroCard');
@@ -259,9 +127,9 @@
       isFlipped = true; 
       playFlipSound(); 
       if (currentCardIndex === 3) { 
-        triggerParticles(84, true, 0.5, originX, originY, 1.8); // 75% dari 112
+        triggerParticles(112, true, 0.5, originX, originY, 1.8); // Spread multiplier lebih luas khusus kartu 4
       } else { 
-        triggerParticles(30, false, 0.78, originX, originY, 1.0); // 75% dari 40
+        triggerParticles(40, false, 0.78, originX, originY, 1.0); 
       } 
       if (currentCardIndex === 2) { 
         runScoreAnimation(originX, originY); 
@@ -274,13 +142,13 @@
   }
 
   function initAudio() { audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
-  function playFlipSound() { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.frequency.setValueAtTime(800, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.1); gain.gain.setValueAtTime(0.2, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1); osc.start(audioContext.currentTime); osc.stop(audioContext.currentTime + 0.1); }
-  function playDrawSound() { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.frequency.setValueAtTime(400, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.15); gain.gain.setValueAtTime(0.15, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15); osc.start(audioContext.currentTime); osc.stop(audioContext.currentTime + 0.15); }
-  function playScorePing(frequency) { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.frequency.value = frequency; gain.gain.setValueAtTime(0.1, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05); osc.start(audioContext.currentTime); osc.stop(audioContext.currentTime + 0.05); }
-  function playScoreSuccess() { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.frequency.setValueAtTime(1200, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.3); gain.gain.setValueAtTime(0.2, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3); osc.start(audioContext.currentTime); osc.stop(audioContext.currentTime + 0.3); }
+  function playFlipSound() { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(300, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1); gain.gain.setValueAtTime(0.5, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15); osc.start(); osc.stop(audioContext.currentTime + 0.15); }
+  function playDrawSound() { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'triangle'; osc.frequency.setValueAtTime(800, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1); gain.gain.setValueAtTime(0.3, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1); osc.start(); osc.stop(audioContext.currentTime + 0.1); }
+  function playScorePing(frequency) { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'square'; osc.frequency.setValueAtTime(frequency, audioContext.currentTime); gain.gain.setValueAtTime(0.1, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05); osc.start(); osc.stop(audioContext.currentTime + 0.05); }
+  function playScoreSuccess() { if (!audioContext) return; const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(440, audioContext.currentTime); osc.frequency.setValueAtTime(554.37, audioContext.currentTime + 0.1); osc.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.2); osc.frequency.setValueAtTime(880, audioContext.currentTime + 0.3); gain.gain.setValueAtTime(0.3, audioContext.currentTime); gain.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + 0.8); osc.start(); osc.stop(audioContext.currentTime + 0.8); }
   
   function runScoreAnimation(ox, oy) { 
-    let chips = 0; let mult = 0; const targetChips = 5000; const targetMult = 25; const scoreDisplay = document.getElementById('scoreDisplay'); const rankDisplay = document.getElementById('rankDisplay'); 
+    let chips = 0; let mult = 0; const targetChips = 5000; const targetMult = 25; const scoreDisplay = document.getElementById('scoreDisplay'); const rankDisplay = document.getElementById('rankDisplay'); if(!scoreDisplay || !rankDisplay) return; 
     let interval = setInterval(() => { 
       chips += 250; mult += 1; if(chips > targetChips) chips = targetChips; if(mult > targetMult) mult = targetMult; scoreDisplay.innerText = chips + ' X ' + mult; playScorePing(400 + (mult * 20)); 
       if(chips === targetChips && mult === targetMult) { 
@@ -288,7 +156,7 @@
         setTimeout(() => { 
           rankDisplay.innerText = "RANK S+ UTS MASTER"; 
           playScoreSuccess(); 
-          triggerParticles(105, false, 0.78, ox, oy, 1.0); // 75% dari 140
+          triggerParticles(140, false, 0.78, ox, oy, 1.0); 
         }, 300); 
       } 
     }, 50); 
@@ -300,12 +168,7 @@
   window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
   function drawSpiral() { 
-    const cx = bgCanvas.width / 2; const cy = bgCanvas.height / 2; const maxRadius = Math.max(cx, cy) * 1.5; bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height); bgCtx.fillStyle = '#0f172a'; bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height); bgCtx.strokeStyle = 'rgba(251, 191, 36, 0.2)'; bgCtx.lineWidth = 2; 
-    for (let i = 0; i < 15; i++) { 
-      const angle = angleOffset + (i * Math.PI / 8); const radius = (i / 15) * maxRadius; const x = cx + Math.cos(angle) * radius; const y = cy + Math.sin(angle) * radius; 
-      if (i === 0) bgCtx.moveTo(x, y); else bgCtx.lineTo(x, y); 
-    } 
-    bgCtx.stroke(); angleOffset += 0.01; requestAnimationFrame(drawSpiral); 
+    const cx = bgCanvas.width / 2; const cy = bgCanvas.height / 2; const maxRadius = Math.max(cx, cy) * 1.5; bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height); bgCtx.fillStyle = '#0f172a'; bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height); bgCtx.save(); bgCtx.translate(cx, cy); bgCtx.rotate(angleOffset); const numArms = 12; const step = (Math.PI * 2) / numArms; for (let i = 0; i < numArms; i++) { bgCtx.beginPath(); bgCtx.moveTo(0, 0); bgCtx.quadraticCurveTo( Math.cos(i * step + 0.5) * maxRadius * 0.5, Math.sin(i * step + 0.5) * maxRadius * 0.5, Math.cos(i * step) * maxRadius, Math.sin(i * step) * maxRadius ); bgCtx.lineTo( Math.cos((i+0.5) * step) * maxRadius, Math.sin((i+0.5) * step) * maxRadius ); bgCtx.lineTo(0, 0); bgCtx.fillStyle = i % 2 === 0 ? '#1e3a8a' : '#0f172a'; bgCtx.fill(); } bgCtx.restore(); angleOffset -= 0.002; requestAnimationFrame(drawSpiral); 
   }
 
   function triggerParticles(amount = 40, isLove = false, speedFactor = 0.78, cx, cy, spreadMult = 1.0) { 
@@ -375,6 +238,10 @@
     } 
     requestAnimationFrame(drawParticles); 
   }
+
+  drawSpiral(); 
+  drawParticles(); 
+  initCard();
 </script>
 </body>
 </html>
